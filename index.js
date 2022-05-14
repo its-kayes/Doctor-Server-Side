@@ -18,13 +18,27 @@ async function run() {
     try {
         await client.connect();
         let doctorServicesdb = client.db("doctor_portal").collection("services");
-
+        let bookingdb = client.db("doctor_portal").collection("booking");
 
         app.get('/services', async(req, res)=> {
             let query = {}
             let cursor = doctorServicesdb.find(query);
             let result = await cursor.toArray();
             res.send(result);
+        });
+
+        app.post('/booking', async(req, res)=> {
+            let booking = req.body;
+            let query = {name: booking.name, patientEmail: booking.patientEmail, date: booking.date}
+            let exits = await bookingdb.findOne(query);
+            if (exits) {
+                return res.send({success: false, booking: exits})
+            }
+            else {
+                let result = await bookingdb.insertOne(booking);
+                return res.send({success: true, result});
+            }
+            
         })
 
     }
