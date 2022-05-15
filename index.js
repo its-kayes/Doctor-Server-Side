@@ -41,6 +41,25 @@ async function run() {
             
         })
 
+        app.get('/available', async(req, res)=> {
+
+            let date = req.query.date;
+            let services = await doctorServicesdb.find().toArray();
+            let query = {date: date};
+            let bookings = await bookingdb.find(query).toArray();
+            services.forEach( service => {
+                let serviceBooking = bookings.filter(b => b.service === service.name);
+                let bookedSlots = serviceBooking.map(booked => booked.slot );
+                let available = service.slots.filter(s => !bookedSlots.includes(s));
+                // console.log(available);
+                service.slots = available;
+            } )
+
+            res.send(services);
+        })
+
+
+
     }
 
     finally {
