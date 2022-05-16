@@ -8,9 +8,9 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const uri = "mongodb+srv://doctor_admin:MkoOVty4ROTRMPfz@cluster0.af5hd.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+// const uri = "mongodb+srv://doctor_admin:MkoOVty4ROTRMPfz@cluster0.af5hd.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.af5hd.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.af5hd.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -26,6 +26,15 @@ async function run() {
             let result = await cursor.toArray();
             res.send(result);
         });
+
+
+
+        app.get('/booking', async(req, res)=> {
+            let email = req.query.email;
+            let query = {patientEmail: email};
+            let result = await bookingdb.find(query).toArray();
+            res.send(result);
+        })
 
         app.post('/booking', async(req, res)=> {
             let booking = req.body;
