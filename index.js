@@ -48,10 +48,21 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/user', async(req, res)=> {
+        app.get('/user', verifyJWT, async(req, res)=> {
             let result = await userdb.find().toArray();
             res.send(result);
-        })
+        });
+
+        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+            let email = req.params.email;
+            let filter = { email: email };
+            const updateDoc = {
+                $set:{role: 'admin'},
+            };
+            let result = await userdb.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
 
         app.put('/user/:email', async (req, res) => {
             let email = req.params.email;
@@ -64,7 +75,7 @@ async function run() {
             let result = await userdb.updateOne(filter, updateDoc, option);
             let accessToken = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '10d' });
             res.send({ result, token: accessToken });
-        })
+        });
 
         app.get('/booking', verifyJWT, async (req, res) => {
             let email = req.query.email;
