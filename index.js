@@ -16,6 +16,24 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+function verifyJWT(req, res, next) {
+    let authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'UnAuthorization Access' });
+    }
+    let token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ massage: 'Forbidden Access' });
+        }
+        req.decoded = decoded;
+        console.log(decoded);
+        next()
+
+    });
+}
+
+
 async function run() {
     try {
         await client.connect();
@@ -39,15 +57,24 @@ async function run() {
                 $set: user,
             };
             let result = await userdb.updateOne(filter, updateDoc, option);
-            let accessToken = jwt.sign({email: email}, process.env.ACCESS_TOKEN, { expiresIn:'10d'});
-            res.send({result, token: accessToken});
+            let accessToken = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '10d' });
+            res.send({ result, token: accessToken });
         })
 
-        app.get('/booking', async (req, res) => {
+        app.get('/booking', verifyJWT, async (req, res) => {
             let email = req.query.email;
-            let query = { patientEmail: email };
-            let result = await bookingdb.find(query).toArray();
-            res.send(result);
+            // let authorization = req.headers.authorization;
+            // console.log('token', authorization);
+            let decodedEmail = req.decoded.email;
+            if (email === decodedEmail) {
+                let query = { patientEmail: email };
+                let result = await bookingdb.find(query).toArray();
+                return res.send(result);
+            }
+            else{
+                return res.status(403).send({ massage: 'Forbidden Access'});
+            }
+
         })
 
         app.post('/booking', async (req, res) => {
