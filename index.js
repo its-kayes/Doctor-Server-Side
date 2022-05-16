@@ -48,6 +48,11 @@ async function run() {
             res.send(result);
         });
 
+        app.get('/user', async(req, res)=> {
+            let result = await userdb.find().toArray();
+            res.send(result);
+        })
+
         app.put('/user/:email', async (req, res) => {
             let email = req.params.email;
             let user = req.body;
