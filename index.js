@@ -43,7 +43,7 @@ async function run() {
 
         app.get('/services', async (req, res) => {
             let query = {}
-            let cursor = doctorServicesdb.find(query);
+            let cursor = doctorServicesdb.find(query).project({name: 1});
             let result = await cursor.toArray();
             res.send(result);
         });
