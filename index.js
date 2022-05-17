@@ -94,7 +94,6 @@ async function run() {
         app.get('/booking', verifyJWT, async (req, res) => {
             let email = req.query.email;
             // let authorization = req.headers.authorization;
-            // console.log('token', authorization);
             let decodedEmail = req.decoded.email;
             if (email === decodedEmail) {
                 let query = { patientEmail: email };
