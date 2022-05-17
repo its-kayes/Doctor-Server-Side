@@ -48,19 +48,33 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/user', verifyJWT, async(req, res)=> {
+        app.get('/user', verifyJWT, async (req, res) => {
             let result = await userdb.find().toArray();
             res.send(result);
         });
 
+        app.get('/admin/:email', verifyJWT,  async(req, res) => {
+            let email = req.params.email;
+            let user = await userdb.findOne({email: email});
+            let isAdmin = user.role === 'admin';
+            res.send({admin: isAdmin});
+        })
+
         app.put('/user/admin/:email', verifyJWT, async (req, res) => {
             let email = req.params.email;
-            let filter = { email: email };
-            const updateDoc = {
-                $set:{role: 'admin'},
-            };
-            let result = await userdb.updateOne(filter, updateDoc);
-            res.send(result);
+            let requester = req.decoded.email;
+            let requesterAccount = await userdb.findOne({ email: requester });
+            if (requesterAccount.role === 'admin') {
+                let filter = { email: email };
+                const updateDoc = {
+                    $set: { role: 'admin' },
+                };
+                let result = await userdb.updateOne(filter, updateDoc);
+                res.send(result);
+            }
+            else {
+                return res.status(403).send({ massage: 'Forbidden Access' });
+            }
         });
 
 
@@ -87,8 +101,8 @@ async function run() {
                 let result = await bookingdb.find(query).toArray();
                 return res.send(result);
             }
-            else{
-                return res.status(403).send({ massage: 'Forbidden Access'});
+            else {
+                return res.status(403).send({ massage: 'Forbidden Access' });
             }
 
         })
