@@ -40,10 +40,11 @@ async function run() {
         let doctorServicesdb = client.db("doctor_portal").collection("services");
         let bookingdb = client.db("doctor_portal").collection("booking");
         let userdb = client.db("doctor_portal").collection("user");
+        let doctordb = client.db("doctor_portal").collection("doctors");
 
         app.get('/services', async (req, res) => {
             let query = {}
-            let cursor = doctorServicesdb.find(query).project({name: 1});
+            let cursor = doctorServicesdb.find(query).project({ name: 1 });
             let result = await cursor.toArray();
             res.send(result);
         });
@@ -53,11 +54,11 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/admin/:email', verifyJWT,  async(req, res) => {
+        app.get('/admin/:email', verifyJWT, async (req, res) => {
             let email = req.params.email;
-            let user = await userdb.findOne({email: email});
+            let user = await userdb.findOne({ email: email });
             let isAdmin = user.role === 'admin';
-            res.send({admin: isAdmin});
+            res.send({ admin: isAdmin });
         })
 
         app.put('/user/admin/:email', verifyJWT, async (req, res) => {
@@ -106,6 +107,12 @@ async function run() {
 
         })
 
+        app.post('/doctors', verifyJWT, async (req, res) => {
+            let doctor = req.body;
+            let result = await doctordb.insertOne(doctor);
+            res.send(result);
+        }); 
+
         app.post('/booking', async (req, res) => {
             let booking = req.body;
             let query = { name: booking.name, patientEmail: booking.patientEmail, date: booking.date }
@@ -135,7 +142,9 @@ async function run() {
             })
 
             res.send(services);
-        })
+        });
+
+
 
 
 
