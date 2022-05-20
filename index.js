@@ -76,7 +76,7 @@ async function run() {
             let user = await userdb.findOne({ email: email });
             let isAdmin = user.role === 'admin';
             res.send({ admin: isAdmin });
-        })
+        });
 
         // app.put('/user/admin/:email', verifyJWT, async (req, res) => {
         //     let email = req.params.email;
