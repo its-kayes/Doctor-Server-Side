@@ -42,6 +42,23 @@ async function run() {
         let userdb = client.db("doctor_portal").collection("user");
         let doctordb = client.db("doctor_portal").collection("doctors");
 
+
+        let verifyAdmin = async (req, res, next) => {
+            let requester = req.decoded.email;
+            let requesterAccount = await userdb.findOne({ email: requester });
+            if (requesterAccount.role === 'admin') {
+                next()
+            }
+            else {
+                return res.status(403).send({ massage: 'Forbidden Access' });
+            }
+        }
+
+        app.get('/doctors', verifyJWT, verifyAdmin, async(req, res)=> {
+            let doctors = await doctordb.find().toArray();
+            res.send(doctors);
+        });
+
         app.get('/services', async (req, res) => {
             let query = {}
             let cursor = doctorServicesdb.find(query).project({ name: 1 });
@@ -61,22 +78,34 @@ async function run() {
             res.send({ admin: isAdmin });
         })
 
-        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        // app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        //     let email = req.params.email;
+        //     let requester = req.decoded.email;
+        //     let requesterAccount = await userdb.findOne({ email: requester });
+        //     if (requesterAccount.role === 'admin') {
+        //         let filter = { email: email };
+        //         const updateDoc = {
+        //             $set: { role: 'admin' },
+        //         };
+        //         let result = await userdb.updateOne(filter, updateDoc);
+        //         res.send(result);
+        //     }
+        //     else {
+        //         return res.status(403).send({ massage: 'Forbidden Access' });
+        //     }
+        // });
+
+
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             let email = req.params.email;
-            let requester = req.decoded.email;
-            let requesterAccount = await userdb.findOne({ email: requester });
-            if (requesterAccount.role === 'admin') {
-                let filter = { email: email };
-                const updateDoc = {
-                    $set: { role: 'admin' },
-                };
-                let result = await userdb.updateOne(filter, updateDoc);
-                res.send(result);
-            }
-            else {
-                return res.status(403).send({ massage: 'Forbidden Access' });
-            }
+            let filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
+            };
+            let result = await userdb.updateOne(filter, updateDoc);
+            res.send(result);
         });
+
 
 
         app.put('/user/:email', async (req, res) => {
@@ -111,7 +140,14 @@ async function run() {
             let doctor = req.body;
             let result = await doctordb.insertOne(doctor);
             res.send(result);
-        }); 
+        });
+
+        app.delete('/doctors/:email', verifyJWT, verifyAdmin, async(req, res) => {
+            let email = req.params.email;
+            let filter = {email: email};
+            let result = await doctordb.deleteOne(filter);
+            res.send(result);
+        })
 
         app.post('/booking', async (req, res) => {
             let booking = req.body;
