@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express')
 const app = express()
 const cors = require('cors');
@@ -160,6 +160,14 @@ async function run() {
                 let result = await bookingdb.insertOne(booking);
                 return res.send({ success: true, result });
             }
+
+        });
+
+        app.get('/payment/:id', verifyJWT, async(req, res) => {
+            let id = req.params.id;
+            let query = {_id: ObjectId(id)};
+            let data = await bookingdb.findOne(query);
+            res.send(data);
 
         })
 
