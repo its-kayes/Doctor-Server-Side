@@ -2,7 +2,10 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express')
 const app = express()
 const cors = require('cors');
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY0);
 let jwt = require('jsonwebtoken');
+
+
 
 require('dotenv').config()
 const port = process.env.PORT || 5000;
@@ -77,6 +80,22 @@ async function run() {
             let isAdmin = user.role === 'admin';
             res.send({ admin: isAdmin });
         });
+
+
+        app.post('/create-payment-intent', verifyJWT, async(req, res)=> {
+            let service = req.body;
+            let price = service.price;
+            let amount = price * 100;
+            
+            let paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd  ",
+                payment_method_types: ['card'],
+            })
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            })
+        })
 
         // app.put('/user/admin/:email', verifyJWT, async (req, res) => {
         //     let email = req.params.email;
